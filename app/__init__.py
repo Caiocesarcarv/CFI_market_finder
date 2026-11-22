@@ -1,3 +1,3 @@
 """CFI Market Finder - plataforma local de inteligência de mercados internacionais."""
 
-__version__ = "1.0.0-fase3"
+__version__ = "1.0.0-fase4"

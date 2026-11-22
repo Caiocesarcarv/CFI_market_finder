@@ -13,9 +13,10 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
-from app.api import analysis, health, reference, searches, trade
+from app.api import ai, analysis, health, reference, searches, trade
 from app.config import FRONTEND_DIR, Settings, load_settings
 from app.database import connect, init_db
+from app.errors import AppError
 from app.services import reference as reference_service
 from app.services.http import ExternalServiceError
 
@@ -49,6 +50,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
 
+    @app.exception_handler(AppError)
+    async def app_error(request: Request, exc: AppError) -> JSONResponse:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
     @app.exception_handler(ExternalServiceError)
     async def external_error(request: Request, exc: ExternalServiceError) -> JSONResponse:
         # Falha de API externa: mensagem clara, sem dados inventados no lugar.
@@ -69,6 +74,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reference.router, prefix="/api")
     app.include_router(trade.router, prefix="/api")
     app.include_router(analysis.router, prefix="/api")
+    app.include_router(ai.router, prefix="/api")
 
     # Frontend estático servido pelo próprio FastAPI (montado por último,
     # para não capturar as rotas /api e /docs).

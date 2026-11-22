@@ -94,6 +94,33 @@ e combina-os numa **pontuação de atratividade (0–100)**, rotulada como **Est
 - A participação do Brasil usa os dados espelho (o que cada país declara ter importado do Brasil);
   a exportação brasileira do Comex Stat é exibida como referência (`brazil_exports_fob_usd`).
 
+## Inteligência artificial (Fase 4)
+
+A IA (Groq) **interpreta** os indicadores; ela não produz dados.
+
+- **Análise por país:** resumo, oportunidades, riscos, concorrência, estratégia de entrada,
+  recomendações priorizadas e pontos a verificar.
+- **Relatório executivo:** sumário, panorama mundial, 3 a 5 mercados prioritários (escolhidos
+  apenas entre os mercados avaliados), recomendações com prioridade e prazo, riscos e próximos passos.
+  Pode ser baixado em Markdown (`format=md`).
+
+Salvaguardas:
+
+1. A IA recebe uma **ficha de dados** com números já calculados e formatados, mais um guia de leitura
+   dos indicadores. Os prompts ([app/services/prompts.py](app/services/prompts.py)) proíbem
+   números novos, nomes próprios fora da ficha (feiras, empresas, programas) e afirmações sobre
+   tarifas, barreiras ou acordos. Esses temas só podem aparecer em "pontos a verificar".
+2. **Conferência automática:** todo valor em US$ e % do texto gerado é comparado com a ficha.
+   O que não confere aparece em `verification.unverified` e é destacado na tela e no relatório.
+   Mercados sugeridos fora da lista avaliada são descartados.
+3. Todo texto gerado é rotulado como **Estimativa**. Fica em cache por 7 dias e pode ser
+   regenerado com `refresh=true`.
+
+Limitação: a conferência valida **números**, não o raciocínio. A IA ainda pode tirar conclusões
+imprecisas a partir de números corretos, então o texto deve ser revisado antes de circular.
+O plano gratuito do Groq limita a **8.000 tokens por minuto**, o que permite cerca de 1 relatório
+ou 2 análises por minuto. Acima disso, a aplicação pede para aguardar.
+
 ### Importar CSV do Comex Stat (opcional)
 
 Baixe os arquivos `EXP_AAAA.csv` em
@@ -121,7 +148,8 @@ CFI_market_finder/
 │   │   ├── searches.py         Produtos cadastrados e validação de código
 │   │   ├── reference.py        Tabela NCM e sugestão de código por IA
 │   │   ├── trade.py            Importações mundiais e exportações brasileiras
-│   │   └── analysis.py         Ranking de mercados e detalhe por país
+│   │   ├── analysis.py         Ranking de mercados e detalhe por país
+│   │   └── ai.py               Análise por país e relatório executivo (IA)
 │   ├── services/               Regras de negócio e integrações
 │   │   ├── http.py             Cliente HTTP com novas tentativas e erros em português
 │   │   ├── cache.py            Validade do cache das consultas
@@ -131,7 +159,10 @@ CFI_market_finder/
 │   │   ├── comexstat.py        Comex Stat (API e CSV)
 │   │   ├── evolution.py        Evolução histórica (Pandas)
 │   │   ├── analysis.py         Indicadores, pontuação e ranking de mercados
+│   │   ├── markets.py          Montagem do ranking e do detalhe por país
 │   │   ├── groq_client.py      Cliente Groq
+│   │   ├── prompts.py          Prompts especializados e guia de leitura
+│   │   ├── ai_insights.py      Análise por país, relatório executivo e conferência de números
 │   │   └── ncm_ai.py           Produto → NCM com IA + validação oficial
 │   └── tools/comexstat_cli.py  Linha de comando (sync / import CSV)
 ├── frontend/                   HTML, CSS e JavaScript puro
@@ -157,6 +188,8 @@ CFI_market_finder/
 | GET | `/api/brazil/{código}/exports` | Exportações brasileiras por ano e destino (Comex Stat) |
 | GET | `/api/analysis/{código}/markets` | Ranking de mercados recomendados, com indicadores, pontuação e metodologia |
 | GET | `/api/analysis/{código}/markets/{ISO3}` | Detalhe de um mercado: pontuação, série histórica e todos os fornecedores |
+| GET | `/api/ai/{código}/markets/{ISO3}` | Análise do mercado gerada por IA (`format=md` para baixar) |
+| GET | `/api/ai/{código}/report` | Relatório executivo gerado por IA (`format=md` para baixar) |
 | GET/POST | `/api/reference/status`, `/api/reference/sync` | Estado / nova sincronização das tabelas |
 
 As rotas de dados aceitam `refresh=true` para ignorar o cache.
@@ -168,7 +201,7 @@ As rotas de dados aceitam `refresh=true` para ignorar o cache.
       histórica, Comex Stat (API + importação de CSV) e interpretação do produto → NCM com IA.
 - [x] **Fase 3 — Motor de análise:** crescimento, principais fornecedores, participação brasileira,
       pontuação de atratividade e ranking de mercados.
-- [ ] **Fase 4 — Inteligência artificial:** prompts especializados, análises por país, recomendações e relatório executivo.
+- [x] **Fase 4 — Inteligência artificial:** prompts especializados, análises por país, recomendações e relatório executivo.
 - [ ] **Fase 5 — Interface:** dashboard, ranking, gráficos (Plotly.js) e mapa (Leaflet), com as
       bibliotecas copiadas para `frontend/vendor/` para funcionar sem CDN.
 - [ ] **Fase 6 — Testes e empacotamento:** testes de cenários reais e de falha, revisão do run.bat,

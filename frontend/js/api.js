@@ -53,5 +53,11 @@ const Api = (() => {
     worldImports: (code) => request(`/api/trade/${encodeURIComponent(code)}/imports?limit=15`),
     brazilExports: (code) => request(`/api/brazil/${encodeURIComponent(code)}/exports?limit=15`),
     markets: (code) => request(`/api/analysis/${encodeURIComponent(code)}/markets?top=10`),
+    aiCountry: (code, iso3, product) =>
+      request(`/api/ai/${encodeURIComponent(code)}/markets/${encodeURIComponent(iso3)}?product=${encodeURIComponent(product || "")}`),
+    aiReport: (code, product) =>
+      request(`/api/ai/${encodeURIComponent(code)}/report?product=${encodeURIComponent(product || "")}`),
+    aiReportMdUrl: (code, product) =>
+      `/api/ai/${encodeURIComponent(code)}/report?format=md&product=${encodeURIComponent(product || "")}`,
   };
 })();

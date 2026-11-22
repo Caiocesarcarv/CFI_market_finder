@@ -86,9 +86,28 @@ const TradeView = (() => {
     ]);
   }
 
-  function renderMarkets(body) {
+  function renderMarkets(body, search) {
     const b = body.benchmark;
     const br = body.global_suppliers.brazil;
+    const aiOut = el("div", { className: "ai-out" });
+
+    const reportBtn = el("button", { type: "button", className: "secondary", textContent: "Gerar relatório executivo (IA)" });
+    reportBtn.addEventListener("click", async () => {
+      reportBtn.disabled = true;
+      await AiView.run(aiOut, "Gerando relatório executivo com IA",
+        () => Api.aiReport(search.code_digits, search.product_name),
+        (r) => AiView.report(r, Api.aiReportMdUrl(search.code_digits, search.product_name)));
+      reportBtn.disabled = false;
+    });
+
+    const aiLink = (m) => {
+      const btn = el("button", { type: "button", className: "link action", textContent: "Análise IA" });
+      btn.addEventListener("click", () =>
+        AiView.run(aiOut, `Gerando análise de ${m.country_pt || m.country} com IA`,
+          () => Api.aiCountry(search.code_digits, m.iso3, search.product_name), AiView.country));
+      return btn;
+    };
+
     const rows = body.markets.map((m) =>
       el("tr", {}, [
         el("td", { textContent: String(m.rank) }),
@@ -100,6 +119,7 @@ const TradeView = (() => {
           : pctCell(m.indicators.cagr_pct),
         el("td", { className: "num", textContent: share(m.indicators.brazil_share_pct) }),
         el("td", {}, [el("small", { textContent: m.highlights.join(" · ") })]),
+        el("td", {}, [aiLink(m)]),
       ])
     );
     const date = body.fetched_at ? new Date(body.fetched_at).toLocaleString("pt-BR") : "—";
@@ -117,12 +137,14 @@ const TradeView = (() => {
           ` · ${b.markets_evaluated} mercados avaliados (${b.markets_excluded_small} muito pequenos excluídos).`,
       }),
       body.warnings.length ? el("ul", { className: "warnings" }, body.warnings.map((w) => el("li", { textContent: w }))) : "",
-      table([["#"], ["Mercado"], ["Pontuação", "num"], ["Importa", "num"], ["Cresc. a.a.", "num"], ["Fatia BR", "num"], ["Por quê"]], rows),
+      table([["#"], ["Mercado"], ["Pontuação", "num"], ["Importa", "num"], ["Cresc. a.a.", "num"], ["Fatia BR", "num"], ["Por quê"], [""]], rows),
       el("p", {
         className: "meta",
         textContent: "Pesos: " + Object.entries(body.methodology.weights)
           .map(([k, w]) => `${body.methodology.indicators[k].label} ${Math.round(w * 100)}%`).join(" · "),
       }),
+      reportBtn,
+      aiOut,
     ]);
   }
 
@@ -144,7 +166,7 @@ const TradeView = (() => {
     const [mk] = await Promise.allSettled([Api.markets(search.code_digits)]);
     container.replaceChildren(
       el("h3", { textContent: `${search.product_name} — ${search.code_type} ${search.code_digits}` }),
-      mk.status === "fulfilled" ? renderMarkets(mk.value) : errorBox("Mercados recomendados", mk.reason),
+      mk.status === "fulfilled" ? renderMarkets(mk.value, search) : errorBox("Mercados recomendados", mk.reason),
       el("div", { className: "trade-grid" }, [
         imp.status === "fulfilled" ? renderImports(imp.value) : errorBox("Importações mundiais", imp.reason),
         exp.status === "fulfilled" ? renderExports(exp.value) : errorBox("Exportações brasileiras", exp.reason),
