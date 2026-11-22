@@ -52,5 +52,6 @@ const Api = (() => {
     classify: (q) => request(`/api/classify?q=${encodeURIComponent(q)}`),
     worldImports: (code) => request(`/api/trade/${encodeURIComponent(code)}/imports?limit=15`),
     brazilExports: (code) => request(`/api/brazil/${encodeURIComponent(code)}/exports?limit=15`),
+    markets: (code) => request(`/api/analysis/${encodeURIComponent(code)}/markets?top=10`),
   };
 })();

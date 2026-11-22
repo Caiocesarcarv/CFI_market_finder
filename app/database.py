@@ -111,6 +111,12 @@ MIGRATIONS: dict[int, str] = {
         PRIMARY KEY (source, query_key)
     );
     """,
+    3: """
+    -- Fase 3: detalhamento por país fornecedor (parceiro) na Comtrade
+    ALTER TABLE comtrade_flows ADD COLUMN partner_iso TEXT;
+    ALTER TABLE comtrade_flows ADD COLUMN partner_name TEXT;
+    CREATE INDEX IF NOT EXISTS idx_flows_year_partner ON comtrade_flows(cmd_code, year, partner_code);
+    """,
 }
 
 LATEST_SCHEMA_VERSION = max(MIGRATIONS)

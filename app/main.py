@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
-from app.api import health, reference, searches, trade
+from app.api import analysis, health, reference, searches, trade
 from app.config import FRONTEND_DIR, Settings, load_settings
 from app.database import connect, init_db
 from app.services import reference as reference_service
@@ -68,6 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(searches.router, prefix="/api")
     app.include_router(reference.router, prefix="/api")
     app.include_router(trade.router, prefix="/api")
+    app.include_router(analysis.router, prefix="/api")
 
     # Frontend estático servido pelo próprio FastAPI (montado por último,
     # para não capturar as rotas /api e /docs).

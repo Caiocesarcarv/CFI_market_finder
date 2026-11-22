@@ -86,6 +86,46 @@ const TradeView = (() => {
     ]);
   }
 
+  function renderMarkets(body) {
+    const b = body.benchmark;
+    const br = body.global_suppliers.brazil;
+    const rows = body.markets.map((m) =>
+      el("tr", {}, [
+        el("td", { textContent: String(m.rank) }),
+        el("td", {}, [el("strong", { textContent: m.country_pt || m.country })]),
+        el("td", { className: "num", textContent: m.score == null ? "—" : m.score.toLocaleString("pt-BR") }),
+        el("td", { className: "num", textContent: usd(m.indicators.imports_usd) }),
+        m.indicators.cagr_pct != null && m.indicators.cagr_pct >= 100
+          ? el("td", { className: "num pos", textContent: "salto", title: `${m.indicators.cagr_pct}% a.a. (base muito pequena)` })
+          : pctCell(m.indicators.cagr_pct),
+        el("td", { className: "num", textContent: share(m.indicators.brazil_share_pct) }),
+        el("td", {}, [el("small", { textContent: m.highlights.join(" · ") })]),
+      ])
+    );
+    const date = body.fetched_at ? new Date(body.fetched_at).toLocaleString("pt-BR") : "—";
+    return el("div", {}, [
+      el("h3", {}, [
+        `Mercados recomendados — referência ${body.reference_year} `,
+        el("span", { className: "badge badge-estimativa", textContent: "Estimativa" }),
+      ]),
+      el("p", { className: "meta", textContent: `${body.source} · dados obtidos em ${date}. ${body.data_nature_note}` }),
+      el("p", {
+        className: "meta",
+        textContent:
+          `Brasil: ${share(b.brazil_world_share_pct)} das importações mundiais` +
+          (br ? ` (${br.rank}º exportador)` : "") +
+          ` · ${b.markets_evaluated} mercados avaliados (${b.markets_excluded_small} muito pequenos excluídos).`,
+      }),
+      body.warnings.length ? el("ul", { className: "warnings" }, body.warnings.map((w) => el("li", { textContent: w }))) : "",
+      table([["#"], ["Mercado"], ["Pontuação", "num"], ["Importa", "num"], ["Cresc. a.a.", "num"], ["Fatia BR", "num"], ["Por quê"]], rows),
+      el("p", {
+        className: "meta",
+        textContent: "Pesos: " + Object.entries(body.methodology.weights)
+          .map(([k, w]) => `${body.methodology.indicators[k].label} ${Math.round(w * 100)}%`).join(" · "),
+      }),
+    ]);
+  }
+
   function errorBox(title, err) {
     return el("div", {}, [el("h3", { textContent: title }), el("p", { className: "form-message error", textContent: err.message })]);
   }
@@ -100,8 +140,11 @@ const TradeView = (() => {
       Api.worldImports(search.code_digits),
       Api.brazilExports(search.code_digits),
     ]);
+    // O ranking reaproveita os dados já em cache das consultas acima
+    const [mk] = await Promise.allSettled([Api.markets(search.code_digits)]);
     container.replaceChildren(
       el("h3", { textContent: `${search.product_name} — ${search.code_type} ${search.code_digits}` }),
+      mk.status === "fulfilled" ? renderMarkets(mk.value) : errorBox("Mercados recomendados", mk.reason),
       el("div", { className: "trade-grid" }, [
         imp.status === "fulfilled" ? renderImports(imp.value) : errorBox("Importações mundiais", imp.reason),
         exp.status === "fulfilled" ? renderExports(exp.value) : errorBox("Exportações brasileiras", exp.reason),

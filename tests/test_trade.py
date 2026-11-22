@@ -40,7 +40,7 @@ def app_client(tmp_path):
 
 def test_imports_ranking_and_cache(app_client, monkeypatch):
     calls = []
-    monkeypatch.setattr(comtrade, "_fetch", lambda s, hs, years: calls.append(hs) or fake_records())
+    monkeypatch.setattr(comtrade, "_fetch", lambda s, p: calls.append(p["cmdCode"]) or fake_records())
     client, _ = app_client()
     with client:
         r = client.get("/api/trade/0901.11.10/imports")
@@ -67,7 +67,7 @@ def test_imports_ranking_and_cache(app_client, monkeypatch):
 
 
 def test_evolution_like_for_like(app_client, monkeypatch):
-    monkeypatch.setattr(comtrade, "_fetch", lambda s, hs, years: fake_records())
+    monkeypatch.setattr(comtrade, "_fetch", lambda s, p: fake_records())
     client, _ = app_client()
     with client:
         body = client.get("/api/trade/090111/evolution?iso3=USA").json()
@@ -91,7 +91,7 @@ def test_comtrade_failure_without_cache_returns_error(app_client, monkeypatch):
 
 
 def test_comtrade_failure_with_cache_uses_saved_data(app_client, monkeypatch):
-    monkeypatch.setattr(comtrade, "_fetch", lambda s, hs, years: fake_records())
+    monkeypatch.setattr(comtrade, "_fetch", lambda s, p: fake_records())
     client, _ = app_client()
     with client:
         client.get("/api/trade/090111/imports")

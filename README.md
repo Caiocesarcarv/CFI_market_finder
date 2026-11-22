@@ -74,6 +74,26 @@ Cuidados de interpretação:
 - **Falhas de API**: se uma fonte estiver fora do ar, a aplicação usa os últimos dados salvos
   (com aviso) ou devolve erro claro. Ela nunca preenche a falta com valores fictícios.
 
+## Motor de análise (Fase 3)
+
+Para cada país importador do produto, a plataforma calcula indicadores a partir de dados reais
+e combina-os numa **pontuação de atratividade (0–100)**, rotulada como **Estimativa**:
+
+| Indicador | Peso | Como é medido |
+|---|---|---|
+| Tamanho do mercado | 30% | Valor importado no ano de referência (último ano completo na Comtrade) |
+| Crescimento | 25% | CAGR das importações em até 3 anos completos |
+| Espaço para o Brasil | 20% | Participação mundial do Brasil no produto − participação do Brasil no país |
+| Abertura a fornecedores | 15% | 1 − HHI dos fornecedores concorrentes (excluindo o Brasil) |
+| Presença brasileira | 10% | 100 se o Brasil tem ≥ 1% do mercado, 50 se < 1%, 0 se não fornece |
+
+- Cada indicador vira percentil entre os mercados avaliados. Se um indicador faltar, os pesos são
+  reescalados e o campo `completeness_pct` mostra a cobertura.
+- Mercados com menos de 0,05% das importações mundiais ficam fora do ranking principal (`min_share_pct`).
+- Cada mercado traz justificativas objetivas (`highlights`) geradas a partir dos indicadores, sem IA.
+- A participação do Brasil usa os dados espelho (o que cada país declara ter importado do Brasil);
+  a exportação brasileira do Comex Stat é exibida como referência (`brazil_exports_fob_usd`).
+
 ### Importar CSV do Comex Stat (opcional)
 
 Baixe os arquivos `EXP_AAAA.csv` em
@@ -100,7 +120,8 @@ CFI_market_finder/
 │   │   ├── health.py           Status
 │   │   ├── searches.py         Produtos cadastrados e validação de código
 │   │   ├── reference.py        Tabela NCM e sugestão de código por IA
-│   │   └── trade.py            Importações mundiais e exportações brasileiras
+│   │   ├── trade.py            Importações mundiais e exportações brasileiras
+│   │   └── analysis.py         Ranking de mercados e detalhe por país
 │   ├── services/               Regras de negócio e integrações
 │   │   ├── http.py             Cliente HTTP com novas tentativas e erros em português
 │   │   ├── cache.py            Validade do cache das consultas
@@ -109,6 +130,7 @@ CFI_market_finder/
 │   │   ├── comtrade.py         UN Comtrade
 │   │   ├── comexstat.py        Comex Stat (API e CSV)
 │   │   ├── evolution.py        Evolução histórica (Pandas)
+│   │   ├── analysis.py         Indicadores, pontuação e ranking de mercados
 │   │   ├── groq_client.py      Cliente Groq
 │   │   └── ncm_ai.py           Produto → NCM com IA + validação oficial
 │   └── tools/comexstat_cli.py  Linha de comando (sync / import CSV)
@@ -133,6 +155,8 @@ CFI_market_finder/
 | GET | `/api/trade/{código}/imports` | Ranking de importadores (Comtrade) com cobertura por ano |
 | GET | `/api/trade/{código}/evolution` | Evolução histórica mundial e por país |
 | GET | `/api/brazil/{código}/exports` | Exportações brasileiras por ano e destino (Comex Stat) |
+| GET | `/api/analysis/{código}/markets` | Ranking de mercados recomendados, com indicadores, pontuação e metodologia |
+| GET | `/api/analysis/{código}/markets/{ISO3}` | Detalhe de um mercado: pontuação, série histórica e todos os fornecedores |
 | GET/POST | `/api/reference/status`, `/api/reference/sync` | Estado / nova sincronização das tabelas |
 
 As rotas de dados aceitam `refresh=true` para ignorar o cache.
@@ -142,7 +166,7 @@ As rotas de dados aceitam `refresh=true` para ignorar o cache.
 - [x] **Fase 1 — Fundação:** estrutura, ambiente Python, FastAPI, SQLite, frontend servido pelo FastAPI.
 - [x] **Fase 2 — Integração de dados:** UN Comtrade por código HS, importações por país, evolução
       histórica, Comex Stat (API + importação de CSV) e interpretação do produto → NCM com IA.
-- [ ] **Fase 3 — Motor de análise:** crescimento, principais fornecedores, participação brasileira,
+- [x] **Fase 3 — Motor de análise:** crescimento, principais fornecedores, participação brasileira,
       pontuação de atratividade e ranking de mercados.
 - [ ] **Fase 4 — Inteligência artificial:** prompts especializados, análises por país, recomendações e relatório executivo.
 - [ ] **Fase 5 — Interface:** dashboard, ranking, gráficos (Plotly.js) e mapa (Leaflet), com as
