@@ -1,0 +1,15 @@
+# Arquivos .bat precisam de quebra de linha CRLF para o cmd do Windows funcionar
+# (inclusive quando o projeto é baixado como ZIP do GitHub).
+*.bat text eol=crlf
+
+# Bibliotecas de terceiros e dados: manter exatamente como baixados
+frontend/vendor/** -text
+*.geojson -text
+
+# Código e texto: normalizar
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.txt text eol=lf

@@ -1,16 +1,39 @@
-# Versões fixadas para instalação reproduzível (Python 3.10+)
+# CFI Market Finder — dependências com TODAS as versões fixadas (instalação reproduzível).
+# Requer Python 3.12 ou mais novo (numpy 2.5 / pandas 3.1).
+# Testado com Python 3.12 e 3.13 no Windows 11.
 
-# Servidor / API
-fastapi==0.165.0
-uvicorn==0.54.0
-pydantic==2.14.4
-python-dotenv==1.2.4
+# ---------------------------------------------------------------- dependências diretas
+fastapi==0.165.0          # API
+uvicorn==0.54.0           # servidor
+pydantic==2.14.4          # validação
+python-dotenv==1.2.4      # leitura do .env
+pandas==3.1.1             # processamento
+requests==2.34.2          # acesso às APIs externas
+comtradeapicall==1.4.0    # usado apenas pelo script avulso baixar_bulk.py
+pytest==9.2.0             # testes
+httpx==0.28.1             # cliente de testes do FastAPI
 
-# Dados
-pandas==3.1.1
-requests==2.34.2
-comtradeapicall==1.4.0
-
-# Testes
-pytest==9.2.0
-httpx==0.28.1
+# ---------------------------------------------------------------- dependências indiretas
+annotated-doc==0.0.7
+annotated-types==0.8.0
+anyio==4.16.0
+certifi==2026.11.20
+charset-normalizer==3.5.2
+click==8.5.1
+colorama==0.4.6
+h11==0.16.0
+httpcore==1.0.9
+idna==3.20
+iniconfig==2.3.1
+numpy==2.5.5
+opentelemetry-api==1.45.2
+packaging==26.3
+pluggy==1.7.0
+pydantic_core==2.50.5
+Pygments==2.21.0
+python-dateutil==4.0.0
+starlette==1.10.0
+typing-inspection==0.4.5
+typing_extensions==4.16.0
+tzdata==2026.6
+urllib3==2.8.0

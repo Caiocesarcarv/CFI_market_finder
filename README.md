@@ -3,81 +3,153 @@
 Plataforma local de inteligência de mercados internacionais para identificar
 oportunidades de exportação para empresas brasileiras.
 
-O usuário descreve um produto; a IA sugere a classificação NCM/HS (sempre
-conferida na tabela oficial). A plataforma então consulta
-estatísticas reais (UN Comtrade e Comex Stat) e indica países potencialmente
-interessantes para exportação.
+Você descreve um produto e a IA sugere a classificação NCM, sempre conferida na tabela
+oficial. A plataforma então consulta estatísticas reais (UN Comtrade e Comex Stat),
+calcula indicadores e mostra em painel, mapa e relatório quais países são mais
+interessantes para exportar.
 
-> **Princípio:** nenhum dado comercial é inventado. Todo número exibido é
-> rotulado como **Real** (fonte oficial), **Estimativa** (cálculo/projeção ou IA) ou
+> **Princípio:** nenhum dado comercial é inventado. Todo número exibido é rotulado como
+> **Real** (fonte oficial), **Estimativa** (cálculo da plataforma ou texto de IA) ou
 > **Demonstrativo** (exemplo ilustrativo).
 
-## Como executar (Windows)
+---
 
-1. Instale o **Python 3.10+** ([python.org](https://www.python.org/downloads/)) marcando *Add python.exe to PATH*.
-2. Dê duplo clique em **`run.bat`**.
-   - Na primeira execução ele cria o `venv`, instala as dependências e cria o `.env`.
-   - Também baixa, em segundo plano, as tabelas oficiais NCM e de países (~2 minutos).
-3. Preencha as chaves no arquivo `.env` (veja `.env.example`) e execute o `run.bat` novamente.
-4. O navegador abre em <http://127.0.0.1:8000>. A documentação da API fica em `/docs`.
+## Instalação (Windows)
 
-Opções: `run.bat --no-browser` (não abre o navegador) e `run.bat --reload` (recarrega ao editar o código).
+### O que é preciso
 
-### Execução manual (qualquer sistema)
+| Item | Detalhe |
+|---|---|
+| Windows 10 ou 11 | testado no Windows 11 |
+| **Python 3.12 ou mais novo** | [python.org/downloads](https://www.python.org/downloads/). Durante a instalação, marque **"Add python.exe to PATH"**. Testado com 3.12 e 3.13. |
+| Internet | para instalar as dependências e consultar os dados (a interface funciona sem CDN) |
+| Chave da UN Comtrade | gratuita, veja abaixo |
+| Chave do Groq | gratuita, veja abaixo (opcional: sem ela, as funções de IA ficam desligadas) |
+
+Não é necessário Node.js, Docker nem servidor externo.
+
+### Passo a passo
+
+1. Copie a pasta do projeto para o computador (ou `git clone`).
+2. Dê duplo clique em **`run.bat`**. Na primeira vez ele:
+   - encontra um Python 3.12+ e cria o ambiente virtual `venv`;
+   - instala as dependências do `requirements.txt` (cerca de 1 minuto);
+   - cria o arquivo `.env` a partir do `.env.example`;
+   - inicia o servidor e abre o navegador em <http://127.0.0.1:8000>;
+   - baixa em segundo plano as tabelas oficiais NCM e de países (cerca de 2 minutos).
+3. Feche a janela do `run.bat`, abra o arquivo **`.env`** no Bloco de Notas e preencha as chaves:
+   ```
+   COMTRADE_API_KEY=sua chave da UN Comtrade
+   GROQ_API_KEY=sua chave do Groq
+   ```
+4. Dê duplo clique em **`diagnostico.bat`** para confirmar que está tudo certo. Ele testa
+   Python, dependências, chaves, banco de dados e a conexão com cada API.
+5. Abra o **`run.bat`** novamente. Nas próximas vezes, ele inicia em poucos segundos.
+
+### Como obter as chaves
+
+- **UN Comtrade:** crie uma conta em <https://comtradedeveloper.un.org>, entre em
+  *Products* → **comtrade - v1** → *Subscribe* (plano gratuito). A chave aparece em
+  *Profile* → *Subscriptions* (*Primary key*). O plano gratuito permite cerca de 500 consultas
+  por dia; cada produto novo usa no máximo 2 por semana, graças ao cache.
+- **Groq:** crie uma conta em <https://console.groq.com> e gere uma chave em **API Keys**.
+  O plano gratuito permite cerca de 8.000 tokens por minuto (≈ 1 relatório ou 2 análises
+  por minuto).
+- **Comex Stat:** público, não precisa de chave.
+
+> As chaves ficam **somente** no `.env`, que não vai para o git. Nunca coloque chaves reais
+> no `.env.example`.
+
+### Opções do run.bat
+
+| Comando | Efeito |
+|---|---|
+| `run.bat` | inicia normalmente e abre o navegador |
+| `run.bat --no-browser` | inicia sem abrir o navegador |
+| `run.bat --reload` | recarrega o servidor ao editar o código (desenvolvimento) |
+| `run.bat --diagnostico` ou `diagnostico.bat` | verifica ambiente, chaves e conexões |
+
+### Solução de problemas
+
+| Sintoma | O que fazer |
+|---|---|
+| "Python 3.12 ou mais novo não encontrado" | Instale o Python 3.12+ marcando "Add python.exe to PATH" e abra o `run.bat` de novo. |
+| "A pasta venv foi criada com um Python anterior ao 3.12" | Apague a pasta `venv` e abra o `run.bat` de novo. |
+| "Não foi possível instalar as dependências" | Verifique a internet ou o proxy da rede; depois abra o `run.bat` de novo. |
+| "A porta 8000 já está em uso" | O sistema provavelmente já está aberto em outra janela. Se não estiver, mude `APP_PORT` no `.env`. |
+| "Chave de API não configurada" / "chave inválida" | Confira o `.env` e rode o `diagnostico.bat`. |
+| "Limite de uso por minuto do Groq" | Aguarde cerca de 1 minuto. Textos já gerados ficam salvos e não gastam cota de novo. |
+| "Tabela oficial NCM: baixando…" | Aguarde alguns segundos na primeira execução. |
+| Uma fonte de dados fora do ar | O sistema usa os últimos dados salvos (com aviso) ou mostra o erro; nunca inventa valores. |
+
+Execução manual, sem o `run.bat` (Windows, Linux ou macOS, com Python 3.12+):
 
 ```bash
 python -m venv venv
-venv\Scripts\activate          # Linux/macOS: source venv/bin/activate
+venv\Scripts\activate            # Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
 python -m app
 ```
 
-### Testes
+---
+
+## Como usar
+
+1. **Nova pesquisa:** descreva o produto (ex.: "café verde em grão") e clique em
+   **Identificar código com IA**. Escolha uma das NCMs sugeridas, todas conferidas na tabela
+   oficial, ou digite o código HS/NCM. Depois clique em **Analisar mercados**.
+2. **Painel do produto:**
+   - **Visão geral:** importações mundiais, participação do Brasil, exportações brasileiras e
+     mercado mais atrativo, com a evolução anual em gráficos;
+   - **Mapa:** países coloridos pela pontuação de atratividade; clique em um país para abri-lo;
+   - **Ranking:** todos os mercados avaliados, com justificativas e a composição da pontuação;
+   - **Mercado:** histórico, fornecedores, formação da pontuação e **análise com IA**;
+   - **Relatório IA:** relatório executivo para download (`.md`) ou impressão/PDF;
+   - **Dados e fontes:** tabelas com os números reais e a metodologia.
+3. O ícone ☾/☀ no topo alterna entre modo claro e escuro (a escolha fica salva).
+
+A primeira análise de um produto leva de 10 a 20 segundos (consulta às APIs). As seguintes
+são instantâneas, porque os dados ficam em cache por 7 dias. "Atualizar dados" força nova consulta.
+
+---
+
+## Testes
 
 ```bash
-venv\Scripts\python -m pytest -q
+venv\Scripts\python -m pytest              # 89 testes, APIs simuladas (sem internet, sem gastar cota)
 ```
 
-Os testes simulam as APIs externas: não usam internet nem gastam cota.
+Os testes cobrem validação de códigos, banco, integrações, cache, cálculo dos indicadores,
+pontuação, IA (conferência de números, descarte de códigos e mercados inventados), falhas de
+conexão, chaves inválidas, limites de uso, ausência de dados e o frontend servido localmente.
 
-## Variáveis de ambiente (`.env`)
+Testes com as **APIs reais** (usam as chaves do `.env` e um banco temporário; custam ~2
+consultas à Comtrade e ~6 mil tokens do Groq):
 
-| Variável | Uso |
-|---|---|
-| `APP_HOST`, `APP_PORT` | Endereço do servidor local (padrão `127.0.0.1:8000`) |
-| `DATABASE_PATH` | Arquivo SQLite (padrão `data/cfi_market_finder.db`) |
-| `COMTRADE_API_KEY` | Chave da UN Comtrade (`UNCOMTRADE_KEY` também é aceito) |
-| `GROQ_API_KEY`, `GROQ_MODEL` | Inferência de IA via Groq (padrão `openai/gpt-oss-120b`) |
+```bash
+set CFI_LIVE_TESTS=1
+venv\Scripts\python -m pytest -m live -v
+```
 
-O Comex Stat é público e não exige chave.
+---
 
-> **Nunca coloque chaves reais no `.env.example`**: ele é versionado no git. As chaves ficam só no `.env`.
-
-## Fontes de dados
+## Fontes de dados e cuidados de interpretação
 
 | Fonte | O que fornece | Como é obtida |
 |---|---|---|
-| **UN Comtrade** (API v1) | Importações anuais de cada país por código HS, do mundo e do Brasil | Uma requisição por código; cache de 7 dias |
-| **Comex Stat** (API MDIC) | Exportações brasileiras por NCM, ano e destino; tabela NCM; países (ISO3) | Automática; cache de 7 dias |
-| **Comex Stat** (CSV) | Mesmos dados de exportação, a partir dos arquivos oficiais `EXP_AAAA.csv` | Importação manual (veja abaixo) |
-| **Groq** | Interpretação do nome do produto → NCM | Sob demanda; cache de 30 dias |
+| **UN Comtrade** (API v1) | Importações anuais de cada país por código HS, com detalhe por fornecedor | Até 2 requisições por código; cache de 7 dias |
+| **Comex Stat** (API do MDIC) | Exportações brasileiras por NCM, ano e destino; tabela NCM; países (ISO3) | Automática; cache de 7 dias |
+| **Comex Stat** (CSV) | Mesmos dados de exportação, a partir dos arquivos oficiais `EXP_AAAA.csv` | Importação opcional (veja abaixo) |
+| **Groq** | Produto → NCM; análises por país; relatório executivo | Sob demanda; cache de 7 a 30 dias |
 
-Cuidados de interpretação:
-
-- **Cobertura da Comtrade**: os anos recentes chegam incompletos (países reportam com atraso).
-  A API marca cada ano como completo ou incompleto e calcula a variação anual só com países
-  presentes nos dois anos (`yoy_comparable_pct`).
-- **NCM × HS**: a Comtrade usa o HS6 internacional; uma NCM de 8 dígitos é consultada pelos
+- **Cobertura da Comtrade:** os anos recentes chegam incompletos (os países informam com atraso).
+  Esses anos aparecem marcados, e a variação anual compara só países presentes nos dois anos.
+- **NCM × HS:** a Comtrade usa o HS6 internacional; uma NCM de 8 dígitos é consultada pelos
   6 primeiros dígitos, que podem incluir outras NCMs.
-- **Valores**: Comtrade = valor declarado pelo importador (geralmente CIF); Comex Stat = FOB.
+- **Valores:** Comtrade = valor declarado pelo importador (geralmente CIF); Comex Stat = FOB.
 - **Ano corrente** no Comex Stat é parcial e vem marcado como tal.
-- **Falhas de API**: se uma fonte estiver fora do ar, a aplicação usa os últimos dados salvos
-  (com aviso) ou devolve erro claro. Ela nunca preenche a falta com valores fictícios.
 
-## Motor de análise (Fase 3)
-
-Para cada país importador do produto, a plataforma calcula indicadores a partir de dados reais
-e combina-os numa **pontuação de atratividade (0–100)**, rotulada como **Estimativa**:
+### Pontuação de atratividade (estimativa)
 
 | Indicador | Peso | Como é medido |
 |---|---|---|
@@ -87,152 +159,105 @@ e combina-os numa **pontuação de atratividade (0–100)**, rotulada como **Est
 | Abertura a fornecedores | 15% | 1 − HHI dos fornecedores concorrentes (excluindo o Brasil) |
 | Presença brasileira | 10% | 100 se o Brasil tem ≥ 1% do mercado, 50 se < 1%, 0 se não fornece |
 
-- Cada indicador vira percentil entre os mercados avaliados. Se um indicador faltar, os pesos são
-  reescalados e o campo `completeness_pct` mostra a cobertura.
-- Mercados com menos de 0,05% das importações mundiais ficam fora do ranking principal (`min_share_pct`).
-- Cada mercado traz justificativas objetivas (`highlights`) geradas a partir dos indicadores, sem IA.
-- A participação do Brasil usa os dados espelho (o que cada país declara ter importado do Brasil);
-  a exportação brasileira do Comex Stat é exibida como referência (`brazil_exports_fob_usd`).
+Cada indicador vira percentil entre os mercados avaliados. Se faltar algum, os pesos são
+reescalados (`completeness_pct`). Mercados com menos de 0,05% das importações mundiais ficam fora
+do ranking principal. A metodologia privilegia mercados **onde o Brasil ainda tem espaço para
+crescer**; os pesos podem ser ajustados em `app/services/analysis.py`.
 
-## Interface (Fase 5)
+### Inteligência artificial
 
-- **Pesquisa** (`#/`): descreva o produto, use "Identificar código com IA" para receber NCMs
-  validadas na tabela oficial, escolha uma e clique em "Analisar mercados". As pesquisas ficam
-  salvas para reabrir depois.
-- **Painel do produto** (`#/produto/{id}`):
-  - indicadores-chave: importações mundiais, participação do Brasil, exportações brasileiras
-    e mercado mais atrativo;
-  - gráficos das importações mundiais e das exportações brasileiras por ano (anos
-    incompletos ou parciais aparecem hachurados e rotulados);
-  - **mapa mundial** da pontuação de atratividade (clique em um país para abri-lo);
-  - **ranking de países** com justificativas, composição da pontuação e principais exportadores;
-  - **mercado selecionado**: série histórica, fornecedores (Brasil em destaque), formação da
-    pontuação e análise com IA;
-  - **relatório executivo** com IA: download em Markdown ou impressão/PDF pelo navegador;
-  - tabelas de dados e metodologia.
-- Todo bloco traz o selo **Real** ou **Estimativa**. A interface segue o tema claro/escuro do sistema.
-- Plotly.js, Leaflet e o mapa-múndi (Natural Earth) ficam em `frontend/vendor/`, sem CDN nem
-  servidor de mapas (veja `frontend/vendor/LICENSES.md`).
+A IA **interpreta** os indicadores; ela não produz dados.
 
-## Inteligência artificial (Fase 4)
+1. Recebe uma ficha de dados já calculada e um guia de leitura. Os prompts
+   (`app/services/prompts.py`) proíbem números novos, nomes próprios fora da ficha e afirmações
+   sobre tarifas, barreiras ou acordos, que só podem aparecer como "pontos a verificar".
+2. **Conferência automática:** todo valor em US$ e % do texto gerado é comparado com os dados.
+   O que não confere é destacado. NCMs inexistentes e mercados fora da lista são descartados.
+3. Todo texto gerado é rotulado como **Estimativa**.
 
-A IA (Groq) **interpreta** os indicadores; ela não produz dados.
-
-- **Análise por país:** resumo, oportunidades, riscos, concorrência, estratégia de entrada,
-  recomendações priorizadas e pontos a verificar.
-- **Relatório executivo:** sumário, panorama mundial, 3 a 5 mercados prioritários (escolhidos
-  apenas entre os mercados avaliados), recomendações com prioridade e prazo, riscos e próximos passos.
-  Pode ser baixado em Markdown (`format=md`).
-
-Salvaguardas:
-
-1. A IA recebe uma **ficha de dados** com números já calculados e formatados, mais um guia de leitura
-   dos indicadores. Os prompts ([app/services/prompts.py](app/services/prompts.py)) proíbem
-   números novos, nomes próprios fora da ficha (feiras, empresas, programas) e afirmações sobre
-   tarifas, barreiras ou acordos. Esses temas só podem aparecer em "pontos a verificar".
-2. **Conferência automática:** todo valor em US$ e % do texto gerado é comparado com a ficha.
-   O que não confere aparece em `verification.unverified` e é destacado na tela e no relatório.
-   Mercados sugeridos fora da lista avaliada são descartados.
-3. Todo texto gerado é rotulado como **Estimativa**. Fica em cache por 7 dias e pode ser
-   regenerado com `refresh=true`.
-
-Limitação: a conferência valida **números**, não o raciocínio. A IA ainda pode tirar conclusões
-imprecisas a partir de números corretos, então o texto deve ser revisado antes de circular.
-O plano gratuito do Groq limita a **8.000 tokens por minuto**, o que permite cerca de 1 relatório
-ou 2 análises por minuto. Acima disso, a aplicação pede para aguardar.
+**Limitação:** a conferência valida números, não o raciocínio. Revise o texto antes de circular.
 
 ### Importar CSV do Comex Stat (opcional)
 
-Baixe os arquivos `EXP_AAAA.csv` em
+Baixe arquivos `EXP_AAAA.csv` em
 [Base de dados bruta – MDIC](https://www.gov.br/mdic/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta),
 coloque-os em `data\comexstat\` e execute:
 
 ```bash
-venv\Scripts\python -m app.tools.comexstat_cli import               # todos os EXP_*.csv da pasta
+venv\Scripts\python -m app.tools.comexstat_cli import                    # todos os EXP_*.csv da pasta
 venv\Scripts\python -m app.tools.comexstat_cli import arquivo.csv --ncm 09   # só o capítulo 09
-venv\Scripts\python -m app.tools.comexstat_cli sync                 # rebaixar tabelas NCM e países
+venv\Scripts\python -m app.tools.comexstat_cli sync                      # rebaixar tabelas NCM e países
 ```
 
-## Estrutura
+---
+
+## Configuração (`.env`)
+
+| Variável | Uso |
+|---|---|
+| `APP_HOST`, `APP_PORT` | Endereço do servidor local (padrão `127.0.0.1:8000`) |
+| `DATABASE_PATH` | Arquivo SQLite (padrão `data/cfi_market_finder.db`) |
+| `COMTRADE_API_KEY` | Chave da UN Comtrade (`UNCOMTRADE_KEY` também é aceito) |
+| `GROQ_API_KEY`, `GROQ_MODEL` | Inferência de IA via Groq (padrão `openai/gpt-oss-120b`) |
+
+## Arquitetura
+
+- **Backend:** Python 3.12+, FastAPI, Uvicorn, Pandas, SQLite (módulo `sqlite3`).
+- **Frontend:** HTML, CSS e JavaScript puro (sem build), servido pelo próprio FastAPI;
+  Plotly.js (gráficos) e Leaflet (mapa) copiados em `frontend/vendor/`.
+- **Dados externos:** UN Comtrade, Comex Stat; **IA:** Groq.
+- Todas as versões das dependências estão fixadas em `requirements.txt`.
 
 ```
 CFI_market_finder/
-├── app/                        Backend (FastAPI)
-│   ├── __main__.py             Inicialização (python -m app): porta, navegador, Uvicorn
-│   ├── main.py                 Criação da aplicação, rotas, erros e frontend estático
-│   ├── config.py               Leitura do .env
-│   ├── database.py             SQLite + migrações (PRAGMA user_version)
-│   ├── models.py               Modelos Pydantic e natureza dos dados
-│   ├── api/                    Rotas HTTP (/api/...)
-│   │   ├── health.py           Status
-│   │   ├── searches.py         Produtos cadastrados e validação de código
-│   │   ├── reference.py        Tabela NCM e sugestão de código por IA
-│   │   ├── trade.py            Importações mundiais e exportações brasileiras
-│   │   ├── analysis.py         Ranking de mercados e detalhe por país
-│   │   └── ai.py               Análise por país e relatório executivo (IA)
-│   ├── services/               Regras de negócio e integrações
-│   │   ├── http.py             Cliente HTTP com novas tentativas e erros em português
-│   │   ├── cache.py            Validade do cache das consultas
-│   │   ├── classification.py   Validação estrutural HS/NCM
-│   │   ├── reference.py        Sincronização e busca na tabela NCM / países
-│   │   ├── comtrade.py         UN Comtrade
-│   │   ├── comexstat.py        Comex Stat (API e CSV)
-│   │   ├── evolution.py        Evolução histórica (Pandas)
-│   │   ├── analysis.py         Indicadores, pontuação e ranking de mercados
-│   │   ├── markets.py          Montagem do ranking e do detalhe por país
-│   │   ├── groq_client.py      Cliente Groq
-│   │   ├── prompts.py          Prompts especializados e guia de leitura
-│   │   ├── ai_insights.py      Análise por país, relatório executivo e conferência de números
-│   │   └── ncm_ai.py           Produto → NCM com IA + validação oficial
-│   └── tools/comexstat_cli.py  Linha de comando (sync / import CSV)
-├── frontend/                   HTML, CSS e JavaScript puro (sem build)
-│   ├── index.html              Telas de pesquisa e painel
-│   ├── css/styles.css          Estilos com tokens de cor (claro/escuro) e versão de impressão
-│   ├── js/ui.js                Criação de elementos e formatação pt-BR
-│   ├── js/api.js               Cliente da API
-│   ├── js/charts.js            Gráficos (Plotly.js)
-│   ├── js/map.js               Mapa mundial (Leaflet + GeoJSON local)
-│   ├── js/dashboard.js         Painel do produto
-│   ├── js/report.js            Exibição das análises e do relatório de IA
-│   ├── js/app.js               Navegação, pesquisa e pesquisas salvas
-│   └── vendor/                 Plotly, Leaflet e mapa-múndi locais
-├── tests/                      Testes automatizados (pytest, APIs simuladas)
-├── data/                       Banco SQLite e CSVs (criados automaticamente, fora do git)
-├── .env.example
-├── requirements.txt
-└── run.bat
+├── run.bat / diagnostico.bat   Inicialização e diagnóstico no Windows
+├── requirements.txt            Dependências (versões fixadas)
+├── .env.example                Modelo de configuração (sem chaves reais)
+├── app/                        Backend
+│   ├── __main__.py             python -m app: porta, navegador, Uvicorn
+│   ├── main.py                 Aplicação, rotas, tratamento de erros, frontend estático
+│   ├── config.py / database.py Configuração (.env) e SQLite com migrações
+│   ├── api/                    Rotas HTTP: health, searches, reference, trade, analysis, ai
+│   ├── services/               Integrações e regras: comtrade, comexstat, reference,
+│   │                           evolution, analysis, markets, ncm_ai, ai_insights, prompts…
+│   └── tools/                  comexstat_cli (CSV/tabelas) e doctor (diagnóstico)
+├── frontend/                   index.html, css/, js/ (ui, api, theme, charts, map,
+│                               dashboard, report, app) e vendor/ (Plotly, Leaflet, mapa)
+├── tests/                      Testes (pytest); test_live.py usa as APIs reais
+└── data/                       Banco SQLite e CSVs (criado automaticamente, fora do git)
 ```
 
-## API
+### API
+
+A documentação interativa fica em <http://127.0.0.1:8000/docs>.
 
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/health` | Status do banco, integrações e tabelas oficiais |
-| GET | `/api/classify?q=` | Sugere NCMs para a descrição do produto (IA, validada na tabela oficial) |
-| GET | `/api/ncm/search?q=` | Busca textual na tabela NCM oficial |
-| GET | `/api/ncm/{código}` | Descrição oficial de uma NCM (ou NCMs de um prefixo HS) |
-| GET/POST/DELETE | `/api/searches` | Produtos cadastrados |
-| GET | `/api/searches/validate-code?code=` | Valida um código HS/NCM |
-| GET | `/api/trade/{código}/imports` | Ranking de importadores (Comtrade) com cobertura por ano |
-| GET | `/api/trade/{código}/evolution` | Evolução histórica mundial e por país |
+| GET | `/api/classify?q=` | Sugere NCMs para a descrição do produto (IA + tabela oficial) |
+| GET | `/api/ncm/search?q=`, `/api/ncm/{código}` | Busca e consulta na tabela NCM oficial |
+| GET/POST/DELETE | `/api/searches` | Pesquisas salvas |
+| GET | `/api/trade/{código}/imports`, `/evolution` | Importadores e evolução histórica (Comtrade) |
 | GET | `/api/brazil/{código}/exports` | Exportações brasileiras por ano e destino (Comex Stat) |
-| GET | `/api/analysis/{código}/markets` | Ranking de mercados recomendados, com indicadores, pontuação e metodologia |
-| GET | `/api/analysis/{código}/markets/{ISO3}` | Detalhe de um mercado: pontuação, série histórica e todos os fornecedores |
-| GET | `/api/ai/{código}/markets/{ISO3}` | Análise do mercado gerada por IA (`format=md` para baixar) |
-| GET | `/api/ai/{código}/report` | Relatório executivo gerado por IA (`format=md` para baixar) |
-| GET/POST | `/api/reference/status`, `/api/reference/sync` | Estado / nova sincronização das tabelas |
+| GET | `/api/analysis/{código}/markets[/{ISO3}]` | Ranking de mercados e detalhe por país |
+| GET | `/api/ai/{código}/markets/{ISO3}`, `/api/ai/{código}/report` | Análise e relatório com IA (`format=md` para baixar) |
 
 As rotas de dados aceitam `refresh=true` para ignorar o cache.
 
 ## Cronograma
 
 - [x] **Fase 1 — Fundação:** estrutura, ambiente Python, FastAPI, SQLite, frontend servido pelo FastAPI.
-- [x] **Fase 2 — Integração de dados:** UN Comtrade por código HS, importações por país, evolução
-      histórica, Comex Stat (API + importação de CSV) e interpretação do produto → NCM com IA.
-- [x] **Fase 3 — Motor de análise:** crescimento, principais fornecedores, participação brasileira,
-      pontuação de atratividade e ranking de mercados.
-- [x] **Fase 4 — Inteligência artificial:** prompts especializados, análises por país, recomendações e relatório executivo.
-- [x] **Fase 5 — Interface:** dashboard, formulário de pesquisa, ranking, gráficos (Plotly.js),
-      mapa (Leaflet) e relatório, com as bibliotecas em `frontend/vendor/` (sem CDN).
-- [ ] **Fase 6 — Testes e empacotamento:** testes de cenários reais e de falha, revisão do run.bat,
-      requirements e README, teste em ambiente limpo.
+- [x] **Fase 2 — Integração de dados:** UN Comtrade, importações por país, evolução histórica,
+      Comex Stat (API + CSV) e interpretação do produto → NCM com IA.
+- [x] **Fase 3 — Motor de análise:** crescimento, fornecedores, participação brasileira,
+      pontuação de atratividade e ranking.
+- [x] **Fase 4 — Inteligência artificial:** prompts especializados, análises por país,
+      recomendações e relatório executivo.
+- [x] **Fase 5 — Interface:** painel, pesquisa, ranking, gráficos, mapa e relatório.
+- [x] **Fase 6 — Testes e empacotamento:** testes reais e de falha, run.bat revisado,
+      diagnóstico, dependências fixadas, README e teste de instalação do zero.
+
+## Licenças de terceiros
+
+Plotly.js (MIT), Leaflet (BSD-2-Clause) e fronteiras Natural Earth (domínio público);
+detalhes em `frontend/vendor/LICENSES.md`.
