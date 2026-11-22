@@ -27,8 +27,22 @@ def test_frontend_served(client):
     r = client.get("/")
     assert r.status_code == 200
     assert "CFI Market Finder" in r.text
-    assert client.get("/js/app.js").status_code == 200
-    assert client.get("/css/styles.css").status_code == 200
+    for path in ["/css/styles.css", "/js/theme.js", "/js/ui.js", "/js/api.js", "/js/charts.js", "/js/map.js",
+                 "/js/report.js", "/js/dashboard.js", "/js/app.js"]:
+        assert client.get(path).status_code == 200, path
+
+
+def test_vendor_libraries_are_local(client):
+    """Plotly, Leaflet e o mapa-múndi são servidos localmente (sem CDN)."""
+    html = client.get("/").text
+    assert "http://" not in html and "https://" not in html.replace('href="/docs"', "")
+    for path in ["/vendor/plotly/plotly-basic.min.js", "/vendor/leaflet/leaflet.js",
+                 "/vendor/leaflet/leaflet.css", "/vendor/geo/world-countries.geojson"]:
+        r = client.get(path)
+        assert r.status_code == 200 and len(r.content) > 1000, path
+    geo = client.get("/vendor/geo/world-countries.geojson").json()
+    isos = {f["properties"]["iso3"] for f in geo["features"]}
+    assert {"BRA", "USA", "CHN", "DEU", "FRA", "MAR"} <= isos
 
 
 def test_search_crud(client):

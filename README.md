@@ -94,6 +94,26 @@ e combina-os numa **pontuação de atratividade (0–100)**, rotulada como **Est
 - A participação do Brasil usa os dados espelho (o que cada país declara ter importado do Brasil);
   a exportação brasileira do Comex Stat é exibida como referência (`brazil_exports_fob_usd`).
 
+## Interface (Fase 5)
+
+- **Pesquisa** (`#/`): descreva o produto, use "Identificar código com IA" para receber NCMs
+  validadas na tabela oficial, escolha uma e clique em "Analisar mercados". As pesquisas ficam
+  salvas para reabrir depois.
+- **Painel do produto** (`#/produto/{id}`):
+  - indicadores-chave: importações mundiais, participação do Brasil, exportações brasileiras
+    e mercado mais atrativo;
+  - gráficos das importações mundiais e das exportações brasileiras por ano (anos
+    incompletos ou parciais aparecem hachurados e rotulados);
+  - **mapa mundial** da pontuação de atratividade (clique em um país para abri-lo);
+  - **ranking de países** com justificativas, composição da pontuação e principais exportadores;
+  - **mercado selecionado**: série histórica, fornecedores (Brasil em destaque), formação da
+    pontuação e análise com IA;
+  - **relatório executivo** com IA: download em Markdown ou impressão/PDF pelo navegador;
+  - tabelas de dados e metodologia.
+- Todo bloco traz o selo **Real** ou **Estimativa**. A interface segue o tema claro/escuro do sistema.
+- Plotly.js, Leaflet e o mapa-múndi (Natural Earth) ficam em `frontend/vendor/`, sem CDN nem
+  servidor de mapas (veja `frontend/vendor/LICENSES.md`).
+
 ## Inteligência artificial (Fase 4)
 
 A IA (Groq) **interpreta** os indicadores; ela não produz dados.
@@ -165,7 +185,17 @@ CFI_market_finder/
 │   │   ├── ai_insights.py      Análise por país, relatório executivo e conferência de números
 │   │   └── ncm_ai.py           Produto → NCM com IA + validação oficial
 │   └── tools/comexstat_cli.py  Linha de comando (sync / import CSV)
-├── frontend/                   HTML, CSS e JavaScript puro
+├── frontend/                   HTML, CSS e JavaScript puro (sem build)
+│   ├── index.html              Telas de pesquisa e painel
+│   ├── css/styles.css          Estilos com tokens de cor (claro/escuro) e versão de impressão
+│   ├── js/ui.js                Criação de elementos e formatação pt-BR
+│   ├── js/api.js               Cliente da API
+│   ├── js/charts.js            Gráficos (Plotly.js)
+│   ├── js/map.js               Mapa mundial (Leaflet + GeoJSON local)
+│   ├── js/dashboard.js         Painel do produto
+│   ├── js/report.js            Exibição das análises e do relatório de IA
+│   ├── js/app.js               Navegação, pesquisa e pesquisas salvas
+│   └── vendor/                 Plotly, Leaflet e mapa-múndi locais
 ├── tests/                      Testes automatizados (pytest, APIs simuladas)
 ├── data/                       Banco SQLite e CSVs (criados automaticamente, fora do git)
 ├── .env.example
@@ -202,7 +232,7 @@ As rotas de dados aceitam `refresh=true` para ignorar o cache.
 - [x] **Fase 3 — Motor de análise:** crescimento, principais fornecedores, participação brasileira,
       pontuação de atratividade e ranking de mercados.
 - [x] **Fase 4 — Inteligência artificial:** prompts especializados, análises por país, recomendações e relatório executivo.
-- [ ] **Fase 5 — Interface:** dashboard, ranking, gráficos (Plotly.js) e mapa (Leaflet), com as
-      bibliotecas copiadas para `frontend/vendor/` para funcionar sem CDN.
+- [x] **Fase 5 — Interface:** dashboard, formulário de pesquisa, ranking, gráficos (Plotly.js),
+      mapa (Leaflet) e relatório, com as bibliotecas em `frontend/vendor/` (sem CDN).
 - [ ] **Fase 6 — Testes e empacotamento:** testes de cenários reais e de falha, revisão do run.bat,
       requirements e README, teste em ambiente limpo.
