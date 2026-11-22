@@ -321,14 +321,20 @@ input.valid { border-color: var(--ok-ink); }
 #view-dashboard, #view-home { min-width: 0; }
 .dash-header > div { min-width: 0; }
 
-/* ------------------------------------------------------------- impressão (relatório) */
+/* ------------------------------------------------------------- impressão / PDF
+   "Imprimir / salvar PDF" copia só o texto da IA para #print-root (js/report.js);
+   no papel aparece apenas ele, começando na primeira página. */
+#print-root { display: none; }
 @media print {
+  @page { margin: 16mm 14mm; }
   :root { color-scheme: light; }
   body { background: #fff; color: #000; }
   .topbar, .subnav, .footer, .btn, .btn-row, .link-btn, .no-print { display: none !important; }
-  body.print-report .container > *:not(#view-dashboard) { display: none !important; }
-  body.print-report #view-dashboard > *:not(#sec-report) { display: none !important; }
-  body.print-report #sec-report .card { border: 0; box-shadow: none; padding: 0; }
-  .ai-box { border: 0; padding: 0; }
-  .card { break-inside: avoid; }
+  body.printing > *:not(#print-root) { display: none !important; }
+  body.printing #print-root { display: block; }
+  #print-root .ai-box { border: 0; padding: 0; margin: 0; }
+  #print-root .card-head { margin-bottom: 4px; }
+  #print-root h3 { font-size: 1.25rem; }
+  #print-root h4 { break-after: avoid; }
+  #print-root li, #print-root .ai-market, #print-root p { break-inside: avoid; }
 }

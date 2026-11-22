@@ -37,15 +37,17 @@ def health(settings: Settings = Depends(get_settings)) -> dict:
         "integrations": {
             "comtrade": {
                 "configured": settings.comtrade_configured,
-                "note": "Chave COMTRADE_API_KEY (ou UNCOMTRADE_KEY) no .env",
+                # dica só quando falta a chave
+                "note": None if settings.comtrade_configured else "preencha COMTRADE_API_KEY no arquivo .env",
             },
             "comexstat": {
-                "configured": True,
-                "note": "API pública, não exige chave",
+                "configured": True,  # API pública, não exige chave
+                "note": None,
             },
             "groq": {
                 "configured": settings.groq_configured,
-                "note": f"Modelo: {settings.groq_model}",
+                "note": f"Modelo: {settings.groq_model}" if settings.groq_configured
+                        else "preencha GROQ_API_KEY no arquivo .env",
             },
         },
         "data_natures": [n.value for n in DataNature],

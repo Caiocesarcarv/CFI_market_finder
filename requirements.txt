@@ -9,7 +9,6 @@ pydantic==2.14.4          # validação
 python-dotenv==1.2.4      # leitura do .env
 pandas==3.1.1             # processamento
 requests==2.34.2          # acesso às APIs externas
-comtradeapicall==1.4.0    # usado apenas pelo script avulso baixar_bulk.py
 pytest==9.2.0             # testes
 httpx==0.28.1             # cliente de testes do FastAPI
 

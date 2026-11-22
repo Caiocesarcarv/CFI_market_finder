@@ -49,7 +49,7 @@
       const items = Object.entries(h.integrations).map(([key, info]) => el("li", {}, [
         el("span", { className: `dot ${info.configured ? "dot-ok" : "dot-off"}` }),
         el("span", {}, [el("strong", { textContent: INTEGRATION_LABELS[key] || key }), el("br"),
-          el("small", { textContent: `${info.configured ? "Configurada" : "Não configurada"} — ${info.note}` })]),
+          el("small", { textContent: `${info.configured ? "Configurada" : "Não configurada"}${info.note ? " — " + info.note : ""}` })]),
       ]));
       const ncm = h.reference_tables && h.reference_tables.ncm;
       if (ncm) {

@@ -82,6 +82,42 @@ const Report = (() => {
     ]);
   }
 
+  /**
+   * Prepara a impressão de um único bloco: copia o conteúdo para #print-root,
+   * que é a única coisa visível no modo de impressão (ver styles.css).
+   * O documento começa direto no texto, sem cabeçalho da página nem página em branco.
+   */
+  function preparePrint(source) {
+    let root = document.getElementById("print-root");
+    if (!root) {
+      root = el("div", { id: "print-root" });
+      document.body.append(root);
+    }
+    root.replaceChildren(source.cloneNode(true));
+    document.body.classList.add("printing");
+  }
+
+  function clearPrint() {
+    document.body.classList.remove("printing");
+    const root = document.getElementById("print-root");
+    if (root) root.replaceChildren();
+  }
+
+  /** Abre a janela de impressão do navegador (onde se escolhe "Salvar como PDF"). */
+  function print(source) {
+    preparePrint(source);
+    window.print();
+  }
+
+  window.addEventListener("afterprint", clearPrint);
+
+  /** Botão "Imprimir / salvar PDF" para um bloco de texto da IA. */
+  function printButton(getSource) {
+    const btn = el("button", { type: "button", className: "btn btn-secondary btn-sm", textContent: "Imprimir / salvar PDF" });
+    btn.addEventListener("click", () => print(getSource()));
+    return btn;
+  }
+
   /** Executa uma geração mostrando progresso e erro no container. */
   async function run(container, label, fn, render) {
     container.replaceChildren(UI.loading(`${label}… (até ~15 s)`));
@@ -95,5 +131,5 @@ const Report = (() => {
     }
   }
 
-  return { country, report, run };
+  return { country, report, run, print, preparePrint, printButton };
 })();

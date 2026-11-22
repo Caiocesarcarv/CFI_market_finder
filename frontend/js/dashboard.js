@@ -301,7 +301,11 @@ const Dashboard = (() => {
     const aiActions = () => {
       const again = el("button", { type: "button", className: "btn btn-secondary btn-sm", textContent: "Gerar novamente" });
       again.addEventListener("click", () => generate(true));
-      return [el("a", { className: "btn btn-secondary btn-sm", href: Api.aiCountryMdUrl(state.search.code_digits, m.iso3, product), textContent: "Baixar .md" }), again];
+      return [
+        el("a", { className: "btn btn-secondary btn-sm", href: Api.aiCountryMdUrl(state.search.code_digits, m.iso3, product), textContent: "Baixar .md" }),
+        Report.printButton(() => aiBox),
+        again,
+      ];
     };
     aiBtn.addEventListener("click", async () => { aiBtn.disabled = true; await generate(false); aiBtn.disabled = false; });
 
@@ -378,11 +382,7 @@ const Dashboard = (() => {
     const btn = el("button", { type: "button", className: "btn", textContent: "Gerar relatório executivo com IA" });
 
     const actions = () => {
-      const print = el("button", { type: "button", className: "btn btn-secondary btn-sm", textContent: "Imprimir / salvar PDF" });
-      print.addEventListener("click", () => {
-        document.body.classList.add("print-report");
-        window.print();
-      });
+      const print = Report.printButton(() => out);
       const again = el("button", { type: "button", className: "btn btn-secondary btn-sm", textContent: "Gerar novamente" });
       again.addEventListener("click", () => generate(true));
       return [el("a", { className: "btn btn-secondary btn-sm", href: Api.aiReportMdUrl(code, product), textContent: "Baixar .md" }), print, again];
@@ -399,8 +399,6 @@ const Dashboard = (() => {
       "A IA interpreta o ranking e os indicadores acima. Os valores citados são conferidos automaticamente com os dados; revise o texto antes de compartilhar.",
       [el("div", { className: "btn-row no-print" }, [btn]), out]);
   }
-
-  window.addEventListener("afterprint", () => document.body.classList.remove("print-report"));
 
   // ------------------------------------------------------------------ dados e fontes
 

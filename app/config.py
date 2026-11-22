@@ -63,7 +63,7 @@ def load_settings() -> Settings:
         app_host=os.getenv("APP_HOST", "127.0.0.1"),
         app_port=port,
         database_path=db_path,
-        # UNCOMTRADE_KEY mantido por compatibilidade com baixar_bulk.py
+        # UNCOMTRADE_KEY: nome antigo da variável, ainda aceito
         comtrade_api_key=_clean(os.getenv("COMTRADE_API_KEY") or os.getenv("UNCOMTRADE_KEY")),
         groq_api_key=_clean(os.getenv("GROQ_API_KEY")),
         groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
