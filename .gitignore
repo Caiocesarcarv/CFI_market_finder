@@ -52,3 +52,9 @@ htmlcov/
 # Arquivos do Sistema Operacional
 .DS_Store
 Thumbs.db
+
+# Dados locais do CFI Market Finder
+data/
+*.db
+*.db-journal
+dados_comtrade_2025/

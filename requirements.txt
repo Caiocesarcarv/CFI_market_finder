@@ -1,0 +1,16 @@
+# Versões fixadas para instalação reproduzível (Python 3.10+)
+
+# Servidor / API
+fastapi==0.165.0
+uvicorn==0.54.0
+pydantic==2.14.4
+python-dotenv==1.2.4
+
+# Dados
+pandas==3.1.1
+requests==2.34.2
+comtradeapicall==1.4.0
+
+# Testes
+pytest==9.2.0
+httpx==0.28.1
