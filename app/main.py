@@ -9,7 +9,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
@@ -75,6 +75,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(trade.router, prefix="/api")
     app.include_router(analysis.router, prefix="/api")
     app.include_router(ai.router, prefix="/api")
+
+    # Navegadores pedem /favicon.ico automaticamente: responde com o ícone SVG (evita 404 no log)
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> FileResponse:
+        return FileResponse(FRONTEND_DIR / "favicon.svg", media_type="image/svg+xml")
 
     # Frontend estático servido pelo próprio FastAPI (montado por último,
     # para não capturar as rotas /api e /docs).

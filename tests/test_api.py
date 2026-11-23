@@ -32,6 +32,13 @@ def test_frontend_served(client):
         assert client.get(path).status_code == 200, path
 
 
+def test_favicon(client):
+    for path in ["/favicon.ico", "/favicon.svg"]:
+        r = client.get(path)
+        assert r.status_code == 200 and r.headers["content-type"].startswith("image/svg+xml"), path
+    assert 'rel="icon"' in client.get("/").text
+
+
 def test_vendor_libraries_are_local(client):
     """Plotly, Leaflet e o mapa-múndi são servidos localmente (sem CDN)."""
     html = client.get("/").text
